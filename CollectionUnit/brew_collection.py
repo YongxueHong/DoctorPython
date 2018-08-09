@@ -28,9 +28,9 @@ class BrewCollection(object):
                                                'packageID=%s&' \
                                                'buildOrder=-completion_time&' \
                                                'tagOrder=name&' \
-                                               'tagStart=50#buildlist' \
+                                               'tagStart=0#buildlist' \
                                % ((page - 1) * 50, pkg_id)
-            print(package_url)
+            # print(package_url)
             html = urlopen(package_url)
             # with urlopen(self.package_url) as html:
             if html.status == 404:
@@ -119,3 +119,60 @@ class BrewCollection(object):
                     if name == pak_name:
                         return pkg_id
         return None
+
+    def search_package_or_build(self, package_name=None, build_name=None, page=1):
+        build_num = 0
+        package_id = ''
+        package_dict = defaultdict(list)
+        build_dict = {}
+        if package_name:
+            suffix_url = 'search?match=glob&type=package&terms=%s' % package_name
+        elif build_name:
+            suffix_url = 'search?match=glob&type=build&terms=%s' % build_name
+        url = self.base_url + suffix_url
+
+        html = urlopen(url)
+        for item in html.read().splitlines():
+            item = convert_to_str(item)
+
+            if package_name:
+                if re.search(r'<th>ID</th><td>\d+</td>', item):
+                    package_id = re.findall(r'\d+', item)[0]
+                if re.search(r'\d+ through \d+ of \d+', item):
+                    build_num =  int(re.findall(r'\d+', item)[-1])
+                    # print('build num', build_num)
+                    break
+            elif build_name:
+                if '%s.rpm' % self.arch in item:
+                    rpm_name = re.split(r'\s+', item)[1]
+                    rpm_url = item.split('\"')[-2]
+                    build_dict[rpm_name] = rpm_url
+        if build_name:
+            return build_dict
+        elif package_name:
+            total_pages = (build_num / 50) + 1
+            # print('total pages', total_pages)
+            if page <= total_pages:
+                package_url = self.base_url + 'packageinfo?buildStart=%d&' \
+                                                   'packageID=%s&' \
+                                                   'buildOrder=-completion_time&' \
+                                                   'tagOrder=name&' \
+                                                   'tagStart=0#buildlist' \
+                                   % ((page - 1) * 50, package_id)
+                # print(package_url)
+                html = urlopen(package_url)
+                if html.status == 404:
+                    raise DoctorError('Not found %s : %d'
+                                      % (package_url, html.status))
+                for item in html.read().splitlines():
+                    item = convert_to_str(item)
+                    if re.search(r'<td><a href=\"buildinfo\?buildID=\d+\">.*</a></td>',
+                                 item):
+                        nvr = item.split('>')[2].split('<')[0]
+                        build_id= re.search(r'buildID=\d+', item).group().split('=')[-1]
+                        package_dict[nvr].append(build_id)
+                    if re.search(r'<td>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}</td>',
+                                 item):
+                        finished_time = item.split('>')[1].split('<')[0]
+                        package_dict[nvr].append(finished_time)
+            return package_dict
