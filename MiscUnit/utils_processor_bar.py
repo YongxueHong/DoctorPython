@@ -19,6 +19,18 @@ def procesor_bar(bar='=', lside='[', rside=']', total=20):
         time.sleep(0.5)
         cur_pos += 1
 
+
+def procesor_spin_bar():
+    bars = ['|', '/', '-', '\\', '|', '/', '-', '\\']
+    sys.stdout.write(' ')
+    sys.stdout.flush()
+    while 1:
+        for bar in bars:
+            sys.stdout.write('\b')
+            sys.stdout.write(bar)
+            sys.stdout.flush()
+            time.sleep(0.5)
+
+
 if __name__ == '__main__':
-    procesor_bar()
     pass
