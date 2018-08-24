@@ -1,11 +1,11 @@
-from MiscUnit.utils_misc import convert_to_str
+from misc_unit.utils_misc import convert_to_str
 from collections import defaultdict
 import re
 from platform import machine
 import os
-from Common.shell import doctor_cmd_output,doctor_cmd_status_output
+from common.shell import doctor_cmd_output,doctor_cmd_status_output
 from sys import version_info
-from Common.error import DoctorError
+from common.error import DoctorError
 
 
 if version_info.major == 3:

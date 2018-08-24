@@ -1,8 +1,8 @@
 from sys import version_info
 import subprocess
-from MiscUnit.utils_misc import convert_to_str
+from misc_unit.utils_misc import convert_to_str
 import time
-from Common.error import DoctorError
+from common.error import DoctorError
 
 
 def doctor_cmd_output(cmd, timeout=300, verbose=True):
